@@ -29,5 +29,16 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
-</Project>
+  <PropertyGroup Label="Versioning">
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
 
+  <ItemGroup Label="Versioning">
+    <PackageReference Include="MinVer" Version="7.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
