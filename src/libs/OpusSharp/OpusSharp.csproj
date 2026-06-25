@@ -1,0 +1,162 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Single target framework - macCatalyst is legacy (unused MAUI remnant) -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyTitle>OpusSharp</AssemblyTitle>
+    <AssemblyDescription>High-performance C# bindings for the Opus audio codec</AssemblyDescription>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS1574;CS1591</NoWarn>
+
+    <!-- NuGet package metadata -->
+    <PackageId>tryAGI.OpusSharp</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <PackageDescription>High-performance C# bindings for the Opus audio codec with precompiled native libraries</PackageDescription>
+    <PackageTags>opus;audio;codec;encoding;decoding;compression</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../../THIRD-PARTY-NOTICES.md">
+      <Pack>true</Pack>
+      <PackagePath>THIRD-PARTY-NOTICES.md</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <!-- Include native libraries in NuGet package (NuGet packing only, not copied to output) -->
+  <ItemGroup>
+    <Content Include="../../../natives/macos/libopus.dylib">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-x64/native/libopus.dylib</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/macos/libopus.dylib">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-arm64/native/libopus.dylib</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/macos/libopus_sharp.dylib" Condition="Exists('../../../natives/macos/libopus_sharp.dylib')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-arm64/native/libopus_sharp.dylib</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/macos/libopus_sharp.dylib" Condition="Exists('../../../natives/macos/libopus_sharp.dylib')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/osx-x64/native/libopus_sharp.dylib</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/windows/opus.dll" Condition="Exists('../../../natives/windows/opus.dll')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/win-x64/native/opus.dll</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/linux/libopus.so" Condition="Exists('../../../natives/linux/libopus.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-x64/native/libopus.so</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/linux/libopus-arm64.so" Condition="Exists('../../../natives/linux/libopus-arm64.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-arm64/native/libopus.so</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/linux/libopus_sharp.so" Condition="Exists('../../../natives/linux/libopus_sharp.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-x64/native/libopus_sharp.so</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/linux/libopus_sharp-arm64.so" Condition="Exists('../../../natives/linux/libopus_sharp-arm64.so')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-arm64/native/libopus_sharp.so</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/windows/opus_sharp.dll" Condition="Exists('../../../natives/windows/opus_sharp.dll')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/win-x64/native/opus_sharp.dll</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Ensure native libraries are copied into publish output when referenced as a project (not only via NuGet) -->
+  <!-- Linux libraries - only for net10.0 (not maccatalyst) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <None Include="../../../natives/linux/libopus.so" Condition="Exists('../../../natives/linux/libopus.so')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-x64/native/libopus.so</Link>
+    </None>
+    <None Include="../../../natives/linux/libopus-arm64.so" Condition="Exists('../../../natives/linux/libopus-arm64.so')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-arm64/native/libopus.so</Link>
+    </None>
+    <None Include="../../../natives/linux/libopus_sharp.so" Condition="Exists('../../../natives/linux/libopus_sharp.so')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-x64/native/libopus_sharp.so</Link>
+    </None>
+    <None Include="../../../natives/linux/libopus_sharp-arm64.so" Condition="Exists('../../../natives/linux/libopus_sharp-arm64.so')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-arm64/native/libopus_sharp.so</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- macOS libraries - for net10.0 (runtime RID resolution) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <None Include="../../../natives/macos/libopus.dylib" Condition="Exists('../../../natives/macos/libopus.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/osx-x64/native/libopus.dylib</Link>
+    </None>
+    <None Include="../../../natives/macos/libopus.dylib" Condition="Exists('../../../natives/macos/libopus.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/osx-arm64/native/libopus.dylib</Link>
+    </None>
+    <None Include="../../../natives/macos/libopus_sharp.dylib" Condition="Exists('../../../natives/macos/libopus_sharp.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/osx-x64/native/libopus_sharp.dylib</Link>
+    </None>
+    <None Include="../../../natives/macos/libopus_sharp.dylib" Condition="Exists('../../../natives/macos/libopus_sharp.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/osx-arm64/native/libopus_sharp.dylib</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Windows libraries - for net10.0 (runtime RID resolution) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <None Include="../../../natives/windows/opus.dll" Condition="Exists('../../../natives/windows/opus.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/win-x64/native/opus.dll</Link>
+    </None>
+    <None Include="../../../natives/windows/opus_sharp.dll" Condition="Exists('../../../natives/windows/opus_sharp.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/win-x64/native/opus_sharp.dll</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Mac Catalyst specific output (only bundle macOS dylibs) -->
+  <ItemGroup Condition="$(TargetFramework.Contains('maccatalyst'))">
+    <None Include="../../../natives/macos/libopus.dylib" Condition="Exists('../../../natives/macos/libopus.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>libopus.dylib</Link>
+    </None>
+    <None Include="../../../natives/macos/libopus_sharp.dylib" Condition="Exists('../../../natives/macos/libopus_sharp.dylib')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>libopus_sharp.dylib</Link>
+    </None>
+  </ItemGroup>
+
+</Project>

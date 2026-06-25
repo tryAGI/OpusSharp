@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/libs/">
+    <Project Path="src/libs/OpusSharp/OpusSharp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="src/tests/OpusSharp.Tests/OpusSharp.Tests.csproj" />
+  </Folder>
+</Solution>
+
