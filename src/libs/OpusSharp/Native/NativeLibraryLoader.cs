@@ -47,6 +47,14 @@ internal static class NativeLibraryLoader
 
         // Try different library names and paths based on platform
         var libraryPaths = GetLibraryPaths(isShim);
+        if (isShim && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            TryPreloadWindowsShimDependency();
+        }
+        else if (isShim && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            TryPreloadLinuxShimDependency();
+        }
 
         foreach (var path in libraryPaths)
         {
@@ -88,6 +96,7 @@ internal static class NativeLibraryLoader
             {
                 paths.AddRange(new[]
                 {
+                    Path.Combine(assemblyDir, "opus_sharp.dll"),
                     Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "opus_sharp.dll"),
                     "opus_sharp.dll",
                     "opus_sharp"
@@ -98,10 +107,13 @@ internal static class NativeLibraryLoader
                 paths.AddRange(new[]
                 {
                     Path.Combine(assemblyDir, "opus.dll"),
+                    Path.Combine(assemblyDir, "libopus-0.dll"),
                     Path.Combine(assemblyDir, "libopus.dll"),
                     Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "opus.dll"),
+                    Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "libopus-0.dll"),
                     Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "libopus.dll"),
                     "opus.dll",
+                    "libopus-0.dll",
                     "libopus.dll"
                 });
             }
@@ -143,6 +155,7 @@ internal static class NativeLibraryLoader
             {
                 paths.AddRange(new[]
                 {
+                    Path.Combine(assemblyDir, "libopus_sharp.so"),
                     Path.Combine(assemblyDir, "runtimes", "linux-x64", "native", "libopus_sharp.so"),
                     Path.Combine(assemblyDir, "runtimes", "linux-arm64", "native", "libopus_sharp.so"),
                     "libopus_sharp.so",
@@ -153,8 +166,11 @@ internal static class NativeLibraryLoader
             {
                 paths.AddRange(new[]
                 {
+                    Path.Combine(assemblyDir, "libopus.so.0"),
                     Path.Combine(assemblyDir, "libopus.so"),
+                    Path.Combine(assemblyDir, "runtimes", "linux-x64", "native", "libopus.so.0"),
                     Path.Combine(assemblyDir, "runtimes", "linux-x64", "native", "libopus.so"),
+                    Path.Combine(assemblyDir, "runtimes", "linux-arm64", "native", "libopus.so.0"),
                     Path.Combine(assemblyDir, "runtimes", "linux-arm64", "native", "libopus.so"),
                     // Common multi-arch locations (Debian/Ubuntu)
                     "/usr/lib/x86_64-linux-gnu/libopus.so.0",
@@ -171,5 +187,65 @@ internal static class NativeLibraryLoader
         }
 
         return paths.ToArray();
+    }
+
+    private static void TryPreloadWindowsShimDependency()
+    {
+        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        var dependencyPaths = new[]
+        {
+            Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "libopus-0.dll"),
+            Path.Combine(assemblyDir, "libopus-0.dll"),
+            "libopus-0.dll",
+            Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "opus.dll"),
+            Path.Combine(assemblyDir, "opus.dll"),
+            "opus.dll"
+        };
+
+        foreach (var path in dependencyPaths)
+        {
+            try
+            {
+                if (NativeLibrary.TryLoad(path, out _))
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // Continue to next path
+            }
+        }
+    }
+
+    private static void TryPreloadLinuxShimDependency()
+    {
+        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        var dependencyPaths = new[]
+        {
+            Path.Combine(assemblyDir, "libopus.so.0"),
+            Path.Combine(assemblyDir, "libopus.so"),
+            Path.Combine(assemblyDir, "runtimes", "linux-x64", "native", "libopus.so.0"),
+            Path.Combine(assemblyDir, "runtimes", "linux-x64", "native", "libopus.so"),
+            Path.Combine(assemblyDir, "runtimes", "linux-arm64", "native", "libopus.so.0"),
+            Path.Combine(assemblyDir, "runtimes", "linux-arm64", "native", "libopus.so"),
+            "libopus.so.0",
+            "libopus.so"
+        };
+
+        foreach (var path in dependencyPaths)
+        {
+            try
+            {
+                if (NativeLibrary.TryLoad(path, out _))
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // Continue to next path
+            }
+        }
     }
 }

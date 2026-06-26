@@ -183,6 +183,7 @@ if command -v docker >/dev/null 2>&1; then
       make -j\$(nproc) &&
       mkdir -p /workspace/dist-opussharp/linux-x64 &&
       cp .libs/libopus.so /workspace/dist-opussharp/linux-x64/ &&
+      cp /workspace/dist-opussharp/linux-x64/libopus.so /workspace/dist-opussharp/linux-x64/libopus.so.0 &&
       gcc -shared -fPIC /workspace/shim/opus_shim.c -I /workspace/opus-*/include -L ./.libs -lopus -o /workspace/dist-opussharp/linux-x64/libopus_sharp.so &&
       echo 'Linux x64 build complete'
     "; then
@@ -203,6 +204,7 @@ if command -v docker >/dev/null 2>&1; then
       make -j\$(nproc) &&
       mkdir -p /workspace/dist-opussharp/linux-arm64 &&
       cp .libs/libopus.so /workspace/dist-opussharp/linux-arm64/ &&
+      cp /workspace/dist-opussharp/linux-arm64/libopus.so /workspace/dist-opussharp/linux-arm64/libopus.so.0 &&
       gcc -shared -fPIC /workspace/shim/opus_shim.c -I /workspace/opus-*/include -L ./.libs -lopus -o /workspace/dist-opussharp/linux-arm64/libopus_sharp.so &&
       echo 'Linux ARM64 build complete'
     "; then
@@ -215,10 +217,12 @@ if command -v docker >/dev/null 2>&1; then
   mkdir -p "$OPUSSHARP_NATIVES/linux"
   if [[ -f "$DIST_DIR/linux-x64/libopus.so" ]]; then
     cp "$DIST_DIR/linux-x64/libopus.so" "$OPUSSHARP_NATIVES/linux/"
+    cp "$DIST_DIR/linux-x64/libopus.so.0" "$OPUSSHARP_NATIVES/linux/" 2>/dev/null || true
     echo "    ✅ Copied Linux x64 library"
   fi
   if [[ -f "$DIST_DIR/linux-arm64/libopus.so" ]]; then
     cp "$DIST_DIR/linux-arm64/libopus.so" "$OPUSSHARP_NATIVES/linux/libopus-arm64.so"
+    cp "$DIST_DIR/linux-arm64/libopus.so.0" "$OPUSSHARP_NATIVES/linux/libopus-arm64.so.0" 2>/dev/null || true
     echo "    ✅ Copied Linux ARM64 library"
   fi
   # Copy shims
@@ -271,9 +275,10 @@ if command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
 
     make -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
     mkdir -p "$DIST_DIR/windows-$OUT_NAME"
-    cp ./.libs/libopus-0.dll "$DIST_DIR/windows-$OUT_NAME/opus.dll" 2>/dev/null || \
-    cp ./.libs/libopus.dll "$DIST_DIR/windows-$OUT_NAME/opus.dll" 2>/dev/null || \
-    cp ./.libs/opus.dll "$DIST_DIR/windows-$OUT_NAME/opus.dll" 2>/dev/null || true
+    cp ./.libs/libopus-0.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || \
+    cp ./.libs/libopus.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || \
+    cp ./.libs/opus.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || true
+    cp "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" "$DIST_DIR/windows-$OUT_NAME/opus.dll" 2>/dev/null || true
 
     popd >/dev/null
   }
@@ -298,6 +303,7 @@ if command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
   # Copy to OpusSharp natives
   mkdir -p "$OPUSSHARP_NATIVES/windows"
   cp "$DIST_DIR/windows-x64/opus.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
+  cp "$DIST_DIR/windows-x64/libopus-0.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
   cp "$DIST_DIR/windows-x64/opus_sharp.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
   
   echo "✅ Windows libraries created in $OPUSSHARP_NATIVES/windows/"

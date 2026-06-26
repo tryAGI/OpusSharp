@@ -115,14 +115,17 @@ encoder.SetFec(enabled: true);
 The package contains native runtime assets under NuGet `runtimes/<rid>/native/`:
 
 - `runtimes/win-x64/native/opus.dll`
+- `runtimes/win-x64/native/libopus-0.dll`
 - `runtimes/win-x64/native/opus_sharp.dll`
 - `runtimes/osx-x64/native/libopus.dylib`
 - `runtimes/osx-x64/native/libopus_sharp.dylib`
 - `runtimes/osx-arm64/native/libopus.dylib`
 - `runtimes/osx-arm64/native/libopus_sharp.dylib`
 - `runtimes/linux-x64/native/libopus.so`
+- `runtimes/linux-x64/native/libopus.so.0`
 - `runtimes/linux-x64/native/libopus_sharp.so`
 - `runtimes/linux-arm64/native/libopus.so`
+- `runtimes/linux-arm64/native/libopus.so.0`
 - `runtimes/linux-arm64/native/libopus_sharp.so`
 
 The native binaries are committed in `natives/` so consumers do not need a system libopus installation.

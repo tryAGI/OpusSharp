@@ -54,14 +54,29 @@
       <PackagePath>runtimes/win-x64/native/opus.dll</PackagePath>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+    <Content Include="../../../natives/windows/libopus-0.dll" Condition="Exists('../../../natives/windows/libopus-0.dll')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/win-x64/native/libopus-0.dll</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
     <Content Include="../../../natives/linux/libopus.so" Condition="Exists('../../../natives/linux/libopus.so')">
       <Pack>true</Pack>
       <PackagePath>runtimes/linux-x64/native/libopus.so</PackagePath>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+    <Content Include="../../../natives/linux/libopus.so.0" Condition="Exists('../../../natives/linux/libopus.so.0')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-x64/native/libopus.so.0</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
     <Content Include="../../../natives/linux/libopus-arm64.so" Condition="Exists('../../../natives/linux/libopus-arm64.so')">
       <Pack>true</Pack>
       <PackagePath>runtimes/linux-arm64/native/libopus.so</PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../../natives/linux/libopus-arm64.so.0" Condition="Exists('../../../natives/linux/libopus-arm64.so.0')">
+      <Pack>true</Pack>
+      <PackagePath>runtimes/linux-arm64/native/libopus.so.0</PackagePath>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="../../../natives/linux/libopus_sharp.so" Condition="Exists('../../../natives/linux/libopus_sharp.so')">
@@ -89,10 +104,20 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>runtimes/linux-x64/native/libopus.so</Link>
     </None>
+    <None Include="../../../natives/linux/libopus.so.0" Condition="Exists('../../../natives/linux/libopus.so.0')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-x64/native/libopus.so.0</Link>
+    </None>
     <None Include="../../../natives/linux/libopus-arm64.so" Condition="Exists('../../../natives/linux/libopus-arm64.so')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>runtimes/linux-arm64/native/libopus.so</Link>
+    </None>
+    <None Include="../../../natives/linux/libopus-arm64.so.0" Condition="Exists('../../../natives/linux/libopus-arm64.so.0')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/linux-arm64/native/libopus.so.0</Link>
     </None>
     <None Include="../../../natives/linux/libopus_sharp.so" Condition="Exists('../../../natives/linux/libopus_sharp.so')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -136,6 +161,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>runtimes/win-x64/native/opus.dll</Link>
+    </None>
+    <None Include="../../../natives/windows/libopus-0.dll" Condition="Exists('../../../natives/windows/libopus-0.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>runtimes/win-x64/native/libopus-0.dll</Link>
     </None>
     <None Include="../../../natives/windows/opus_sharp.dll" Condition="Exists('../../../natives/windows/opus_sharp.dll')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
