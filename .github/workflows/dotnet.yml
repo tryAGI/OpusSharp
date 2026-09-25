@@ -18,6 +18,7 @@ jobs:
       dotnet-version: 10.0.x
       project-path: src/libs/OpusSharp/OpusSharp.csproj
       run-tests: false
+      auto-stable-release: true
       enable-caching: false
     secrets:
       nuget-key: ${{ secrets.NUGET_API_KEY || secrets.NUGET_KEY }}
