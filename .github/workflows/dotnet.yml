@@ -18,7 +18,6 @@ jobs:
       dotnet-version: 10.0.x
       project-path: src/libs/OpusSharp/OpusSharp.csproj
       run-tests: false
-      auto-stable-release: true
       enable-caching: false
     secrets:
       nuget-key: ${{ secrets.NUGET_API_KEY || secrets.NUGET_KEY }}
@@ -47,6 +46,16 @@ jobs:
 
       - name: Run Linux native smoke tests
         run: scripts/smoke-test-linux-native-assets.sh
+
+  auto-stable-release:
+    name: Automatic stable release report
+    needs: [publish, tests]
+    if: github.ref == 'refs/heads/main'
+    uses: tryAGI/workflows/.github/workflows/auto-stable-release.yml@main
+    with:
+      project-path: src/libs/OpusSharp/OpusSharp.csproj
+    secrets:
+      nuget-key: ${{ secrets.NUGET_API_KEY || secrets.NUGET_KEY }}
 
   release:
     name: Release
