@@ -38,6 +38,9 @@ echo "▶ Output to: $OPUSSHARP_NATIVES"
 
 rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
+ATTESTATION_START="$BUILD_DIR/attestation-start"
+touch "$ATTESTATION_START"
+ATTESTER="$REPO_ROOT/scripts/native-build-attestation.py"
 
 # Ensure source tree is clean (in case configure was run in-tree previously)
 if [[ -f "$OPUS_SRC_DIR/config.status" || -f "$OPUS_SRC_DIR/Makefile" ]]; then
@@ -166,19 +169,54 @@ install_name_tool -change /usr/local/lib/libopus.0.dylib @loader_path/libopus.dy
 
 cp "$DIST_DIR/macos-universal/libopus_sharp.dylib" "$OPUSSHARP_NATIVES/macos/"
 echo "✅ macOS shim created in $OPUSSHARP_NATIVES/macos/libopus_sharp.dylib"
+for rid in osx-arm64 osx-x64; do
+  python3 "$ATTESTER" --root "$REPO_ROOT" --rid "$rid" --kind build \
+    --started "$ATTESTATION_START" --source "$OPUS_SRC_DIR" --source "$SHIM_SRC_REPO" \
+    --source "$SCRIPT_DIR/build-opussharp.sh" --tool "$(xcrun --sdk macosx -f clang)" --tool make \
+    --configuration "$BUILD_DIR/macos-arm64/config.log" \
+    --configuration "$BUILD_DIR/macos-x64/config.log" \
+    --parameter "source=$(basename "$OPUS_SRC_DIR")" --parameter "MAC_MIN=$MAC_MIN" --parameter "SDK_VERSION=$(xcrun --sdk macosx --show-sdk-version)" \
+    --parameter "architectures=arm64,x86_64; universal output; asm disabled" \
+    --command "third_party/opus/build-opussharp.sh: macOS"
+done
+
 
 # Build for Linux using Docker
 if command -v docker >/dev/null 2>&1; then
   echo "▶ Building for Linux using Docker..."
   
+  attest_linux() {
+    local rid="$1" image="$2" suffix=""
+    [[ "$rid" == "linux-arm64" ]] && suffix="-arm64"
+    mkdir -p "$OPUSSHARP_NATIVES/linux"
+    cp "$DIST_DIR/$rid/libopus.so" "$OPUSSHARP_NATIVES/linux/libopus${suffix}.so"
+    cp "$DIST_DIR/$rid/libopus.so.0" "$OPUSSHARP_NATIVES/linux/libopus${suffix}.so.0"
+    cp "$DIST_DIR/$rid/libopus_sharp.so" "$OPUSSHARP_NATIVES/linux/libopus_sharp${suffix}.so"
+    python3 "$ATTESTER" --root "$REPO_ROOT" --rid "$rid" --kind build \
+      --started "$ATTESTATION_START" --source "$OPUS_SRC_DIR" --source "$SHIM_SRC_REPO" \
+      --source "$SCRIPT_DIR/build-opussharp.sh" \
+      --tool-report-directory "$DIST_DIR/$rid/toolchain" --container-image "$image" \
+      --parameter "target=$rid; container=ubuntu:22.04" \
+      --parameter "configure=--enable-shared --disable-static --disable-asm --disable-doc --disable-extra-programs" \
+      --parameter "shim=gcc -shared -fPIC" \
+      --command "third_party/opus/build-opussharp.sh: Docker $rid"
+  }
+
   # Build Linux x64 (amd64)
   echo "  ▶ Building Linux x64..."
+  docker pull --platform linux/amd64 ubuntu:22.04 >/dev/null
+  LINUX_X64_IMAGE="$(docker image inspect ubuntu:22.04 --format '{{.Id}}')"
   if docker run --rm --platform linux/amd64 \
     -v "$TP_OPUS_DIR:/workspace" -w /workspace \
-    ubuntu:22.04 bash -c "
+    "$LINUX_X64_IMAGE" bash -c "
       apt-get update -qq && apt-get install -y -qq build-essential autoconf automake libtool pkg-config &&
+      mkdir -p /workspace/dist-opussharp/linux-x64/toolchain &&
+      gcc --version > /workspace/dist-opussharp/linux-x64/toolchain/compiler.txt &&
+      sha256sum \$(command -v gcc) > /workspace/dist-opussharp/linux-x64/toolchain/compiler-sha256.txt &&
+      make --version > /workspace/dist-opussharp/linux-x64/toolchain/make.txt &&
+      dpkg-query -W > /workspace/dist-opussharp/linux-x64/toolchain/packages.txt &&
       cd opus-*/  &&
-      make clean || true &&
+      (make clean || true) &&
       ./configure --enable-shared --disable-static --disable-asm --disable-doc --disable-extra-programs &&
       make -j\$(nproc) &&
       mkdir -p /workspace/dist-opussharp/linux-x64 &&
@@ -187,6 +225,7 @@ if command -v docker >/dev/null 2>&1; then
       gcc -shared -fPIC /workspace/shim/opus_shim.c -I /workspace/opus-*/include -L ./.libs -lopus -o /workspace/dist-opussharp/linux-x64/libopus_sharp.so &&
       echo 'Linux x64 build complete'
     "; then
+    attest_linux linux-x64 "$LINUX_X64_IMAGE"
     echo "    ✅ Linux x64 build successful"
   else
     echo "    ❌ Linux x64 build failed"
@@ -194,12 +233,19 @@ if command -v docker >/dev/null 2>&1; then
   
   # Build Linux ARM64
   echo "  ▶ Building Linux ARM64..."
+  docker pull --platform linux/arm64 ubuntu:22.04 >/dev/null
+  LINUX_ARM64_IMAGE="$(docker image inspect ubuntu:22.04 --format '{{.Id}}')"
   if docker run --rm --platform linux/arm64 \
     -v "$TP_OPUS_DIR:/workspace" -w /workspace \
-    ubuntu:22.04 bash -c "
+    "$LINUX_ARM64_IMAGE" bash -c "
       apt-get update -qq && apt-get install -y -qq build-essential autoconf automake libtool pkg-config &&
+      mkdir -p /workspace/dist-opussharp/linux-arm64/toolchain &&
+      gcc --version > /workspace/dist-opussharp/linux-arm64/toolchain/compiler.txt &&
+      sha256sum \$(command -v gcc) > /workspace/dist-opussharp/linux-arm64/toolchain/compiler-sha256.txt &&
+      make --version > /workspace/dist-opussharp/linux-arm64/toolchain/make.txt &&
+      dpkg-query -W > /workspace/dist-opussharp/linux-arm64/toolchain/packages.txt &&
       cd opus-*/ &&
-      make clean || true &&
+      (make clean || true) &&
       ./configure --enable-shared --disable-static --disable-asm --disable-doc --disable-extra-programs &&
       make -j\$(nproc) &&
       mkdir -p /workspace/dist-opussharp/linux-arm64 &&
@@ -208,6 +254,7 @@ if command -v docker >/dev/null 2>&1; then
       gcc -shared -fPIC /workspace/shim/opus_shim.c -I /workspace/opus-*/include -L ./.libs -lopus -o /workspace/dist-opussharp/linux-arm64/libopus_sharp.so &&
       echo 'Linux ARM64 build complete'
     "; then
+    attest_linux linux-arm64 "$LINUX_ARM64_IMAGE"
     echo "    ✅ Linux ARM64 build successful"
   else
     echo "    ❌ Linux ARM64 build failed"
@@ -235,6 +282,7 @@ if command -v docker >/dev/null 2>&1; then
     echo "    ✅ Copied Linux ARM64 shim"
   fi
   
+
   echo "✅ Linux libraries created in $OPUSSHARP_NATIVES/linux/"
 else
   echo "⚠️  Docker not available for Linux cross-compilation"
@@ -277,8 +325,8 @@ if command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
     mkdir -p "$DIST_DIR/windows-$OUT_NAME"
     cp ./.libs/libopus-0.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || \
     cp ./.libs/libopus.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || \
-    cp ./.libs/opus.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" 2>/dev/null || true
-    cp "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" "$DIST_DIR/windows-$OUT_NAME/opus.dll" 2>/dev/null || true
+    cp ./.libs/opus.dll "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll"
+    cp "$DIST_DIR/windows-$OUT_NAME/libopus-0.dll" "$DIST_DIR/windows-$OUT_NAME/opus.dll"
 
     popd >/dev/null
   }
@@ -288,12 +336,11 @@ if command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
 
   # Build Windows shim (requires headers and import lib in ./.libs)
   echo "  ▶ Building Windows x64 shim..."
-  pushd "$BUILD_DIR/windows-x64" >/dev/null || true
+  pushd "$BUILD_DIR/windows-x64" >/dev/null
   if [[ -d ./.libs ]]; then
-    "$OPUS_SRC_DIR/configure" >/dev/null 2>&1 || true
     x86_64-w64-mingw32-gcc -shared -O3 -DNDEBUG \
       "$SHIM_SRC_REPO" -I "$OPUS_SRC_DIR/include" -L ./.libs -lopus \
-      -o "$DIST_DIR/windows-x64/opus_sharp.dll" || true
+      -o "$DIST_DIR/windows-x64/opus_sharp.dll"
     echo "    ✅ Windows x64 shim build attempted"
   else
     echo "    ⚠️  Skipping shim: ./.libs not found"
@@ -302,10 +349,17 @@ if command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
 
   # Copy to OpusSharp natives
   mkdir -p "$OPUSSHARP_NATIVES/windows"
-  cp "$DIST_DIR/windows-x64/opus.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
-  cp "$DIST_DIR/windows-x64/libopus-0.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
-  cp "$DIST_DIR/windows-x64/opus_sharp.dll" "$OPUSSHARP_NATIVES/windows/" 2>/dev/null || true
+  cp "$DIST_DIR/windows-x64/opus.dll" "$OPUSSHARP_NATIVES/windows/"
+  cp "$DIST_DIR/windows-x64/libopus-0.dll" "$OPUSSHARP_NATIVES/windows/"
+  cp "$DIST_DIR/windows-x64/opus_sharp.dll" "$OPUSSHARP_NATIVES/windows/"
   
+  python3 "$ATTESTER" --root "$REPO_ROOT" --rid win-x64 --kind build \
+    --started "$ATTESTATION_START" --source "$OPUS_SRC_DIR" --source "$SHIM_SRC_REPO" \
+    --source "$SCRIPT_DIR/build-opussharp.sh" --tool x86_64-w64-mingw32-gcc --tool make \
+    --configuration "$BUILD_DIR/windows-x64/config.log" \
+    --parameter "host=x86_64-w64-mingw32" --parameter "CFLAGS=-O3 -DNDEBUG" \
+    --parameter "configure=--enable-shared --disable-static --disable-asm --disable-doc --disable-extra-programs" \
+    --command "third_party/opus/build-opussharp.sh: Windows"
   echo "✅ Windows libraries created in $OPUSSHARP_NATIVES/windows/"
 else
   echo "⚠️  Windows cross-compilation tools not available (x86_64-w64-mingw32-gcc)"

@@ -201,11 +201,11 @@
     },
     {
       "path": "src/libs/OpusSharp/OpusSharp.csproj",
-      "sha256": "bbea4a48224370ccb22c78db5ff69621ace95c02f668e951534186dfa086ae60"
+      "sha256": "b667624d7443a345b330dadd7a8bced51fc63706e1d0db84cfc710725fb60d9c"
     },
     {
       "path": "third_party/opus/build-opussharp.sh",
-      "sha256": "afe162fb91937a83b06f69e4ba9ca9a1c39591ece33353408012ce2eacf33e83"
+      "sha256": "2d535fc816531019efbc441250dccb3cab374d6e9b23852d9999baf9569d608c"
     },
     {
       "path": "third_party/opus/opus-1.5.2/AUTHORS",
@@ -2106,6 +2106,11 @@
     {
       "path": "third_party/opus/shim/opus_shim.c",
       "sha256": "4f630780ac4518d0e41bc8efd9b7804458ee07e4565c0da8a987fda72f85ab33"
+    },
+    {
+      "path": "scripts/native-build-attestation.py",
+      "sha256": "54ee2d655c95483a44ee6e4587d211afb3c1f69cbd53f1993bf130446a9c0dd0"
     }
-  ]
+  ],
+  "input_snapshot_note": "Build/refresh instrumentation inputs updated on 2026-10-03. Historical binary hashes and unknown build attestations are unchanged; these scripts are not asserted to be their original build inputs."
 }
