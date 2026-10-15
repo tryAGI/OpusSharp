@@ -85,10 +85,25 @@ internal static class NativeLibraryLoader
         throw new DllNotFoundException($"Could not load Opus native library. Tried paths: {string.Join(", ", libraryPaths)}");
     }
 
+    private static string GetLibraryBaseDirectory()
+    {
+        // NativeAOT embeds the managed assembly. Its native sidecars live next
+        // to the executable, independently of the process working directory.
+        if (!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported)
+            return AppContext.BaseDirectory;
+
+#pragma warning disable IL3000 // Optional managed-only location; single-file hosts use the explicit app-directory fallback.
+        var location = Assembly.GetExecutingAssembly().Location;
+#pragma warning restore IL3000
+        return string.IsNullOrEmpty(location)
+            ? AppContext.BaseDirectory
+            : Path.GetDirectoryName(location) ?? AppContext.BaseDirectory;
+    }
+
     private static string[] GetLibraryPaths(bool forShim)
     {
         var paths = new List<string>();
-        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        var assemblyDir = GetLibraryBaseDirectory();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -191,7 +206,7 @@ internal static class NativeLibraryLoader
 
     private static void TryPreloadWindowsShimDependency()
     {
-        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        var assemblyDir = GetLibraryBaseDirectory();
         var dependencyPaths = new[]
         {
             Path.Combine(assemblyDir, "runtimes", "win-x64", "native", "libopus-0.dll"),
@@ -220,7 +235,7 @@ internal static class NativeLibraryLoader
 
     private static void TryPreloadLinuxShimDependency()
     {
-        var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".";
+        var assemblyDir = GetLibraryBaseDirectory();
         var dependencyPaths = new[]
         {
             Path.Combine(assemblyDir, "libopus.so.0"),
